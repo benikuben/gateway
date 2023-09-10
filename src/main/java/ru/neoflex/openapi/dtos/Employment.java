@@ -23,7 +23,7 @@ import jakarta.annotation.Generated;
  */
 
 @Schema(name = "Employment", description = "Employment")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-08-30T15:07:27.412559600+03:00[Europe/Moscow]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-03T20:08:46.762957400+03:00[Europe/Moscow]")
 public class Employment implements Serializable {
 
   private static final long serialVersionUID = 1L;
