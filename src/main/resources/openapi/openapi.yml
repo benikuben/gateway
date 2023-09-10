@@ -1,0 +1,359 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Gateway API
+servers:
+  - url: https://localhost:8080
+    description: localhost
+paths:
+  /application:
+    post:
+      summary: Create loan application
+      operationId: createApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanApplicationRequest'
+      responses:
+        '200':
+          description: Application created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offers'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /application/apply:
+    post:
+      summary: Choose 1 of 4 offers
+      operationId: applyOffer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanOffer'
+      responses:
+        '200':
+          description: Offer applied
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /application/registration/{applicationId}:
+    post:
+      summary: Finish registration
+      operationId: finishRegistration
+      parameters:
+        - name: applicationId
+          in: path
+          description: Id of application
+          schema:
+            type: integer
+            format: int64
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinishRegistrationRequest'
+      responses:
+        '200':
+          description: Application updated
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /document/{applicationId}:
+    post:
+      summary: Create document request
+      operationId: sendDocuments
+      parameters:
+        - name: applicationId
+          in: path
+          description: Id of application
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        '200':
+          description: Successfully sent
+  /document/{applicationId}/sign:
+    post:
+      summary: Sign documents request
+      operationId: signDocuments
+      parameters:
+        - name: applicationId
+          in: path
+          description: Id of application
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        '200':
+          description: Successfully sent
+  /document/{applicationId}/sign/code:
+    post:
+      summary: Verify SES code request
+      operationId: verifyCode
+      parameters:
+        - name: applicationId
+          in: path
+          description: Id of application
+          schema:
+            type: integer
+            format: int64
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: integer
+              description: Ses code
+              example: 1234
+      responses:
+        '200':
+          description: Documents signed
+components:
+  schemas:
+    LoanApplicationRequest:
+      description: Loan application request
+      type: object
+      required:
+        - amount
+        - term
+        - firstName
+        - lastName
+        - email
+        - birthdate
+        - passportSeries
+        - passportNumber
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Loan amount
+          example: 10000.00
+        term:
+          type: integer
+          description: Loan term
+          example: 6
+        firstName:
+          type: string
+          description: First name
+          example: Ivan
+        lastName:
+          type: string
+          description: Last name
+          example: Ivanov
+        middleName:
+          type: string
+          description: Middle name
+          example: Ivanovich
+        email:
+          type: string
+          description: Email
+          example: ivan@mail.ru
+        birthdate:
+          type: date
+          format: yyyy-mm-dd
+          x-field-extra-annotation: "@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer.class) 
+          @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer.class)"
+          example: 2000-01-01
+        passportSeries:
+          type: string
+          description: Passport series
+          example: 1234
+        passportNumber:
+          type: string
+          description: Passport number
+          example: 123456
+    LoanOffer:
+      description: Loan offer
+      type: object
+      required:
+        - applicationId
+        - requestedAmount
+        - totalAmount
+        - term
+        - monthlyPayment
+        - rate
+        - isInsuranceEnabled
+        - isSalaryClient
+      properties:
+        applicationId:
+          type: integer
+          format: int64
+          example: 1
+          description: Id of application
+        requestedAmount:
+          type: number
+          format: double
+          description: Requested loan amount
+          example: 10000.00
+        totalAmount:
+          type: number
+          format: double
+          description: Total loan amount
+          example: 10150.00
+        term:
+          type: integer
+          description: Loan term
+          example: 6
+        monthlyPayment:
+          type: number
+          format: double
+          description: Monthly payment
+          example: 1756.38
+        rate:
+          type: number
+          format: double
+          description: Rate
+          example: 13
+        isInsuranceEnabled:
+          type: boolean
+          description: Is insurance enabled
+          example: true
+        isSalaryClient:
+          type: boolean
+          description: Is salary client
+          example: true
+    Offers:
+      description: Four offers
+      type: array
+      maxItems: 4
+      items:
+        $ref: '#/components/schemas/LoanOffer'
+    FinishRegistrationRequest:
+      description: Finish registration request
+      type: object
+      required:
+        - gender
+        - maritalStatus
+        - dependentAmount
+        - passportIssueDate
+        - passportIssueBranch
+        - employment
+        - account
+      properties:
+        gender:
+          $ref: '#/components/schemas/Gender'
+          description: Gender
+        maritalStatus:
+          $ref: '#/components/schemas/MaritalStatus'
+          description: Martial status
+        dependentAmount:
+          type: integer
+          description: Dependent amount
+          example: 1
+        passportIssueDate:
+          type: date
+          x-field-extra-annotation: "@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer.class) 
+          @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer.class)"
+          format: yyyy-mm-dd
+          description: Passport issue date in YYYY-MM-DD format
+          example: 2014-01-01
+        passportIssueBranch:
+          type: string
+          description: Passport issue branch
+          example: UFMS Moscow
+        employment:
+          $ref: '#/components/schemas/Employment'
+        account:
+          type: string
+          description: Account
+          example: 01234567890123456789
+    Employment:
+      description: Employment
+      type: object
+      required:
+        - employmentStatus
+        - employerINN
+        - salary
+        - position
+        - workExperienceTotal
+        - workExperienceCurrent
+      properties:
+        employmentStatus:
+          $ref: '#/components/schemas/EmploymentStatus'
+          description: Employment status
+        employerINN:
+          type: string
+          description: Employment INN
+          example: 0123456789
+        salary:
+          type: number
+          format: double
+          description: Salary
+          example: 10000
+        position:
+          $ref: '#/components/schemas/Position'
+          description: Position
+        workExperienceTotal:
+          type: integer
+          description: Total work experience
+          example: 12
+        workExperienceCurrent:
+          type: integer
+          description: Current work experience
+          example: 3
+    ErrorResponse:
+      description: Error
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Message
+          example: amount must not be null
+    Errors:
+      description: Errors
+      type: array
+      items:
+        $ref: '#/components/schemas/ErrorResponse'
+    Gender:
+      description: Gender
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - NON_BINARY
+    MaritalStatus:
+      description: Martial status
+      type: string
+      enum:
+        - MARRIED
+        - DIVORCED
+        - SINGLE
+        - WIDOW_WIDOWER
+    EmploymentStatus:
+      description: Employment status
+      type: string
+      enum:
+        - EMPLOYED
+        - UNEMPLOYED
+        - SELF_EMPLOYED
+        - BUSINESS_OWNER
+    Position:
+      description: Position
+      type: string
+      enum:
+        - WORKER
+        - MID_MANAGER
+        - TOP_MANAGER
+        - OWNER
